@@ -98,6 +98,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
                 .and()
                 .apply(securityConfigurerAdapter());
+        
     }
 
 
