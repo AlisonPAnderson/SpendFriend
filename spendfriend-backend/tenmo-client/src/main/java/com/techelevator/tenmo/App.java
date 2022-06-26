@@ -5,6 +5,7 @@ import com.techelevator.tenmo.services.AccountService;
 import com.techelevator.tenmo.services.AuthenticationService;
 import com.techelevator.tenmo.services.ConsoleService;
 import com.techelevator.tenmo.services.TransferService;
+import com.techelevator.util.BasicLogger;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -18,8 +19,6 @@ public class App {
     private final AuthenticationService authenticationService = new AuthenticationService(API_BASE_URL);
     private final AccountService accountService = new AccountService(API_BASE_URL);
     private final TransferService transferService = new TransferService(API_BASE_URL);
-
-    private final User user = new User();
 
     private AuthenticatedUser currentUser;
 
@@ -72,7 +71,7 @@ public class App {
             consoleService.printErrorMessage();
         }
         if (currentUser == null) {
-            consoleService.printErrorMessage();
+            System.out.println("Invalid username or password.");
         }
     }
 
@@ -105,16 +104,15 @@ public class App {
         if (accountService.getBalance(currentUser.getUser().getAccount().getId()) == null) {
             System.out.println("You cannot access this balance. ");
         } else {
-            System.out.println("Your current balance is:  $" + accountService.getBalance(currentUser.getUser().getAccount().getId()));
+            System.out.printf("Your current balance is:  $ %.2f" , accountService.getBalance(currentUser.getUser().getAccount().getId()));
         }
     }
 
 	private void viewTransferHistory() {
 
         System.out.println("--------------------------------------------------------");
-        System.out.println("------------------Transfer History----------------------");
+        System.out.println("--------------------Transfer History--------------------");
         System.out.printf("%-10s %-2s %-10s %-2s %-10s %-2s %-10s\n", "Transfer ID", " | ", "From", " | ", "To", " | ", "Amount");
-        //System.out.println("Transfer ID                 |  Username                                       Amount     ");
         System.out.println("--------------------------------------------------------");
 
     List<Transfer> transferHistory = transferService.getAllTransfersByAccountId(currentUser.getUser().getAccount().getId());
@@ -123,7 +121,6 @@ public class App {
                 User toUser = accountService.getUserByUserId(t.getToAccount().getUserId());
                 User fromUser = accountService.getUserByUserId(t.getFromAccount().getUserId());
                 System.out.printf("%-11s %-2s %-10s %-2s %-10s %-2s %-10s\n", t.getTransferId(), " | ", fromUser.getUsername(), " | ", toUser.getUsername(), " | ", "$" + t.getAmount());
-                //System.out.println("Transfer ID: " + t.getTransferId() + "  |  From User: " + fromUser.getUsername() + "  |  To User: " + toUser.getUsername() + "  |  $" + t.getAmount());
             }
         }
         System.out.println("\n");
@@ -132,7 +129,18 @@ public class App {
         int selection = consoleService.promptForMenuSelection("Please choose an option: ");
         if (selection == 1) {
             long transferID = consoleService.promptForInt("Enter a transfer ID to view transfer details: ");
-            showTransferDetails(transferID);
+            try {
+                if (currentUser.getUser().getAccount().getId() == transferService.getTransferByTransferId(transferID).getAccountIdTo() ||
+                        currentUser.getUser().getAccount().getId() == transferService.getTransferByTransferId(transferID).getAccountIdFrom())
+                {
+                    showTransferDetails(transferID);
+                } else {
+                    System.out.println("You are not authorized to view this transaction.");
+                }
+            } catch (Exception e) {
+                BasicLogger.log(e.getMessage() + " | Current user: " + currentUser.getUser().getUsername());
+                consoleService.printErrorMessage();
+            }
         }
 
 	}
@@ -160,30 +168,48 @@ public class App {
             if (selection == 1) {
                 // APPROVE TRANSFER
                 long transferId = consoleService.promptForInt("Please enter the ID of the transfer you would like to approve: ");
-                Transfer transfer = transferService.approveTransfer(transferId);
-                if (transfer.getTransferStatus() == TransferStatus.nsf) {
-                    System.out.println("Non sufficient funds.");
-                    consoleService.printMainMenu();
-                } else if (transfer.getTransferStatus() == TransferStatus.unauthorized) {
-                    System.out.println("You are not authorized to approve or decline this transaction.");
-                }else if (transfer.getTransferStatus() == TransferStatus.approved) {
-                    Transfer approvedTransfer = transferService.getTransferByTransferId(transfer.getTransferId());
-                    System.out.println("Approved transfer ID: " + approvedTransfer.getTransferId() +
-                            "\nSent: $" + approvedTransfer.getAmount() + " to: " + accountService.getUserByUserId(approvedTransfer.getToAccount().getUserId()).getUsername() +
-                            "\nYour updated balance: $" + accountService.getAccountByUserId(currentUser.getUser().getId()).getBalance());
+                try {
+                    if (transferService.getTransferByTransferId(transferId).getTransferStatus() != TransferStatus.pending) {
+                        System.out.println("Only pending transfers can be approved");
+                    } else {
+                        Transfer transfer = transferService.approveTransfer(transferId);
+                        if (transfer.getTransferStatus() == TransferStatus.nsf) {
+                            System.out.println("Non sufficient funds.");
+                            consoleService.printMainMenu();
+                        } else if (transfer.getTransferStatus() == TransferStatus.unauthorized) {
+                            System.out.println("You are not authorized to approve or decline this transaction.");
+                        } else if (transfer.getTransferStatus() == TransferStatus.approved) {
+                            Transfer approvedTransfer = transferService.getTransferByTransferId(transfer.getTransferId());
+                            System.out.printf("Approved transfer ID: %d   \n Sent: $ %.2f   To User: %s   \n  Your updated balance: $ %.2f" + approvedTransfer.getTransferId() ,
+                                    approvedTransfer.getAmount(), accountService.getUserByUserId(approvedTransfer.getToAccount().getUserId()).getUsername() ,
+                                    accountService.getAccountByUserId(currentUser.getUser().getId()).getBalance());
+                        }
+                    }
+                } catch (Exception e) {
+                    BasicLogger.log(e.getMessage() + " | Current user: " + currentUser.getUser().getUsername());
+                    consoleService.printErrorMessage();
                 }
 
                 validOption = true;
             } else if (selection == 2) {
                 // REJECT TRANSFER
                 long transferId = consoleService.promptForInt("Please enter the ID of the transfer you would like to reject: ");
-                Transfer rejectedTransfer = transferService.rejectTransfer(transferId);
-                if (rejectedTransfer.getTransferStatus() == TransferStatus.unauthorized) {
-                    System.out.println("You are not authorized to approve or decline this transaction.");
-                }else if (rejectedTransfer.getTransferStatus() == TransferStatus.rejected) {
-                    System.out.println("Rejected transfer ID: " + rejectedTransfer.getTransferId() + " for: $" + rejectedTransfer.getAmount());
+                try {
+                    if (transferService.getTransferByTransferId(transferId).getTransferStatus() != TransferStatus.pending) {
+                        System.out.println("Only pending transfers can be rejected.");
+                    } else {
+                        Transfer rejectedTransfer = transferService.rejectTransfer(transferId);
+                        if (rejectedTransfer.getTransferStatus() == TransferStatus.unauthorized) {
+                            System.out.println("You are not authorized to approve or decline this transaction.");
+                        } else if (rejectedTransfer.getTransferStatus() == TransferStatus.rejected) {
+                            System.out.printf("Rejected transfer ID: %d  Amount: $ %.2f" , rejectedTransfer.getTransferId() , rejectedTransfer.getAmount());
+                        }
+                        validOption = true;
+                    }
+                } catch (Exception e) {
+                    BasicLogger.log(e.getCause() + " | Current user: " + currentUser.getUser().getUsername());
+                    consoleService.printErrorMessage();
                 }
-                validOption = true;
             } else if (selection == 0) {
                 validOption = true;
             } else {
@@ -205,21 +231,17 @@ public class App {
 
         if (transfer.getTransferStatus() == TransferStatus.invalid_transfer) {
             System.out.println("Transfer invalid.");
-            consoleService.printMainMenu();
         } else if (transfer.getTransferStatus() == TransferStatus.user_not_found) {
             System.out.println("User not found.");
-            consoleService.printMainMenu();
         } else if (transfer.getTransferStatus() == TransferStatus.invalid_amount) {
             System.out.println("Invalid transfer amount.");
-            consoleService.printMainMenu();
         } else if (transfer.getTransferStatus() == TransferStatus.nsf) {
             System.out.println("Non sufficient funds.");
-            consoleService.printMainMenu();
         } else if (transfer.getTransferStatus() == TransferStatus.approved) {
             Transfer sentTransfer = transferService.getTransferByTransferId(transfer.getTransferId());
-            System.out.println("Transferred $" + sentTransfer.getAmount() + " To: " + accountService.getUserByUserId(sentTransfer.getToAccount().getUserId()).getUsername() +
-                    "\nYour updated balance: $" + accountService.getAccountByUserId(currentUser.getUser().getId()).getBalance());
-
+            System.out.printf("Transferred $ %.2f  To: %s  Your updated balance: $ %.2f" , sentTransfer.getAmount(),
+                    accountService.getUserByUserId(sentTransfer.getToAccount().getUserId()).getUsername() ,
+                    accountService.getAccountByUserId(currentUser.getUser().getId()).getBalance());
         }
 	}
 
@@ -233,18 +255,14 @@ public class App {
 
         if (transfer.getTransferStatus() == TransferStatus.invalid_transfer) {
             System.out.println("Transfer invalid.");
-            consoleService.printMainMenu();
         } else if (transfer.getTransferStatus() == TransferStatus.user_not_found) {
             System.out.println("User not found.");
-            consoleService.printMainMenu();
         } else if (transfer.getTransferStatus() == TransferStatus.invalid_amount) {
             System.out.println("Invalid transfer amount.");
-            consoleService.printMainMenu();
         } else if (transfer.getTransferStatus() == TransferStatus.nsf) {
             System.out.println("Non sufficient funds.");
-            consoleService.printMainMenu();
         } else if (transfer.getTransferStatus() == TransferStatus.pending) {
-            System.out.println("Requested: $" + transfer.getAmount() + " From: " + accountService.getUserByUserId(td.getFromId()).getUsername());
+            System.out.printf("Requested: $ %.2f   From User: %s" , transfer.getAmount() , accountService.getUserByUserId(td.getFromId()).getUsername());
         }
 
 	}
@@ -259,9 +277,14 @@ public class App {
             String status = String.valueOf(transfer.getTransferStatus());
             BigDecimal amount = transfer.getAmount();
 
-            consoleService.printTransferDetails(id, fromUsername, toUsername, type, status, amount);
+            if (amount != null) {
+                consoleService.printTransferDetails(id, fromUsername, toUsername, type, status, amount);
+            } else {
+                consoleService.printErrorMessage();
+            }
         } catch (Exception e) {
-            System.out.println("Invalid transfer ID.");
+            BasicLogger.log(e.getLocalizedMessage());
+            consoleService.printErrorMessage();
         }
     }
 

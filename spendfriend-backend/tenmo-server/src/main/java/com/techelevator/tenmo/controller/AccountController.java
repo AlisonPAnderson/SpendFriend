@@ -40,12 +40,21 @@ public class AccountController {
 
         if (principal.getName().equals(userService.findByAccountId(accountId).getUsername())) {
             return accountService.getBalance(accountId);
-        } else throw new ResponseStatusException(HttpStatus.I_AM_A_TEAPOT, "Short AND stout!!");
+        } else {
+            BasicLogger.log("User: " + principal.getName() + " attempted unauthorized account access.");
+            throw new ResponseStatusException(HttpStatus.I_AM_A_TEAPOT, "Short AND stout!!");
+        }
     }
 
     @GetMapping("account/{accountId}")
-    public Account findByAccountId (@PathVariable long accountId) {
-        return accountService.findByAccountId(accountId);
+    public Account findByAccountId (@PathVariable long accountId, Principal principal) {
+        if (principal.getName().equals(userService.findByAccountId(accountId).getUsername())) {
+            return accountService.findByAccountId(accountId);
+        } else {
+            BasicLogger.log("User: " + principal.getName() + " attempted unauthorized account access.");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+        }
+
     }
 
     @GetMapping("users")
@@ -59,12 +68,17 @@ public class AccountController {
     }
 
     @GetMapping("user/{userId}/account")
-    public Account findAccountByUserId (@PathVariable long userId) {
-        return accountService.findByUserId(userId);
+    public Account findAccountByUserId (@PathVariable long userId, Principal principal) {
+        if (principal.getName().equals(userService.findByUserId(userId).getUsername())) {
+            return accountService.findByUserId(userId);
+        } else {
+            BasicLogger.log("User: " + principal.getName() + " attempted unauthorized account access.");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+        }
     }
 
     @GetMapping("/user/principal")
-    public String findPrincipal(Principal principal) {
-        return principal.getName();
+    public Principal findPrincipal(Principal principal) {
+        return principal;
     }
 }

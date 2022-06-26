@@ -3,12 +3,14 @@ package com.techelevator.tenmo.controller;
 import javax.annotation.security.PermitAll;
 import javax.validation.Valid;
 import com.techelevator.tenmo.business.UserService;
+import com.techelevator.tenmo.util.BasicLogger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 import com.techelevator.tenmo.dao.UserRepository;
 import com.techelevator.tenmo.model.LoginDTO;
@@ -43,8 +45,13 @@ public class AuthenticationController {
     @RequestMapping(value = "/login", method = RequestMethod.POST)
     public LoginResponse login(@Valid @RequestBody LoginDTO loginDto) {
 
-        User user = userService.findByUsername(loginDto.getUsername());
-        user.setAuthorities("USER");
+        User user = null;
+        try {
+            user = userService.findByUsername(loginDto.getUsername());
+            user.setAuthorities("USER");
+        } catch (UsernameNotFoundException | NullPointerException e) {
+            BasicLogger.log("Failed login: " + e.getMessage() + " username: " + loginDto.getUsername());
+        }
 
         UsernamePasswordAuthenticationToken authenticationToken =
                 new UsernamePasswordAuthenticationToken(loginDto.getUsername(), loginDto.getPassword());
@@ -61,6 +68,7 @@ public class AuthenticationController {
     @PostMapping("/register")
     public void register(@Valid @RequestBody RegisterUserDTO newUser) {
         if(!userService.create(newUser.getUsername(), newUser.getPassword())) {
+            BasicLogger.log("User: " + newUser.getUsername() + " registration failed.");
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User registration failed.");
         }
     }

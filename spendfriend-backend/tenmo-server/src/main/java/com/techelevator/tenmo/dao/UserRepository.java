@@ -6,17 +6,15 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
-/* Alison started by converting the JDBC Dao to JPA repositories. So we have access to all JPA embedded methods. */
+/* Alison started by converting the JDBC Dao to JPA repositories.
+So we have access to all JPA embedded methods. */
 
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
 
     User findByUsername(String username);
-
     User findById(long id);
-
     List<User> findAll();
-
     User findByAccountId(long accountId);
 
 }

@@ -1,5 +1,6 @@
 package com.techelevator.tenmo.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -35,6 +36,7 @@ public class User {
 
    /* Joining an Account and User with a relationship annotation we can see a user's account when we call them */
    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+   @JsonIgnoreProperties("balance")
    private Account account;
 
    @Autowired

@@ -1,0 +1,38 @@
+2022-06-21T13:29:28.5651145 You are not authorized to approve or decline this transaction. | Current user: thursday
+2022-06-21T13:31:11.7039082 null | Current user: thursday
+2022-06-21T13:33:56.6405779 null | Current user: thursday
+2022-06-21T13:34:20.4944631 null | Current user: thursday
+2022-06-21T13:35:15.0447957 You do not have the necessary funds to complete this transaction | Current user: thursday
+2022-06-21T13:36:46.1038636 This user was not found. | Current user: thursday
+2022-06-21T14:37:36.9467986 null
+2022-06-21T14:42:12.4089612 Failed login: null username: friday
+2022-06-21T15:39:35.7359375 You may not transfer funds to the same user ID. | Current user: tuesday
+2022-06-21T15:39:50.2101155 You are not authorized to approve or decline this transaction. | Current user: tuesday
+2022-06-21T15:40:19.0968941 You do not have the necessary funds to complete this transaction | Current user: tuesday
+2022-06-21T15:40:55.3216528 This user was not found. | Current user: tuesday
+2022-06-21T15:42:55.7326878 You are not authorized to approve or decline this transaction. | Current user: tuesday
+2022-06-21T15:43:20.5542095 You are not authorized to approve or decline this transaction. | Current user: tuesday
+2022-06-21T16:05:17.3286048 User: alison attempted to accept non-pending transfer.
+2022-06-21T17:10:19.2248036 User: ashley attempted unauthorized account access.
+2022-06-21T17:10:44.5983295 User: ashley attempted unauthorized account access.
+2022-06-21T17:11:51.2624875 User: ashley attempted unauthorized transfer information access.
+2022-06-21T18:16:07.5535277 Failed login: null username: test
+2022-06-21T18:30:11.721089 You are not authorized to approve or decline this transaction. | Current user: alison
+2022-06-21T18:38:35.3937087 You are not authorized to approve or decline this transaction. | Current user: alison
+2022-06-21T18:40:43.0086347 Failed login: null username: rr
+2022-06-21T18:42:04.1427844 You are not authorized to approve or decline this transaction. | Current user: alison
+2022-06-21T18:47:11.8542806 You do not have the necessary funds to complete this transaction | Current user: alison
+2022-06-21T18:53:09.5114446 You are not authorized to approve or decline this transaction. | Current user: alison
+2022-06-21T18:56:18.3812026 User: ashley attempted unauthorized transfer information access.
+2022-06-21T19:17:49.3352246 You do not have the necessary funds to complete this transaction | Current user: alison
+2022-06-21T19:21:27.7924673 Failed login: null username: yy
+2022-06-21T19:21:49.3485358 You do not have the necessary funds to complete this transaction | Current user: yyy
+2022-06-21T19:28:37.0059306 You do not have the necessary funds to complete this transaction | Current user: alison
+2022-06-21T19:30:52.3900333 You are not authorized to approve or decline this transaction. | Current user: alison
+2022-06-21T19:32:09.0640502 User: ashley attempted unauthorized account access.
+2022-06-21T19:33:18.051836 User: ashley attempted unauthorized transfer information access.
+2022-06-21T20:24:41.9551607 null | Current user: drlaz
+2022-06-21T20:27:22.5402448 You are not authorized to approve or decline this transaction. | Current user: alison
+2022-06-21T20:27:44.869024 User: alison attempted unauthorized transfer information access.
+2022-06-21T20:33:06.9137082 You are not authorized to approve or decline this transaction. | Current user: ashley
+2022-06-21T20:33:48.5028449 You do not have the necessary funds to complete this transaction | Current user: ashley

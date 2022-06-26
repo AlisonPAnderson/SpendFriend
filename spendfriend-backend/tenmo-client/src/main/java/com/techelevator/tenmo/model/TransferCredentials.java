@@ -5,6 +5,7 @@ import java.math.BigDecimal;
 
 public class TransferCredentials {
 
+    /* THESE ARE USER IDS!!!! */
     private long fromId;
     private long toId;
     private BigDecimal amount;

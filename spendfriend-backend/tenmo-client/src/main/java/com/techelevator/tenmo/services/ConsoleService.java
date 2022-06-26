@@ -7,7 +7,7 @@ import com.techelevator.tenmo.model.UserCredentials;
 import com.techelevator.util.BasicLogger;
 import org.springframework.stereotype.Service;
 
-import java.io.Console;
+
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Scanner;
@@ -15,8 +15,12 @@ import java.util.Scanner;
 @Service
 public class ConsoleService {
 
+    public static final String ANSI_CYAN = "\u001B[36m";
+    public static final String ANSI_RESET = "\u001B[0m";
+    public static final String ANSI_GREEN = "\u001B[32m";
+
+
     private final Scanner scanner = new Scanner(System.in);
-    // private final Console console = System.console();
 
     public int promptForMenuSelection(String prompt) {
         int menuSelection;
@@ -30,10 +34,9 @@ public class ConsoleService {
     }
 
     public void printGreeting() {
-        System.out.println("***************************");
-        System.out.println("* Welcome to SpendFriend! *");
-        System.out.println("By _____ Industries!");
-        System.out.println("***************************");
+        System.out.println(ANSI_GREEN + "***********************" + ANSI_RESET);
+        System.out.println(ANSI_CYAN + "Welcome to SpendFriend!" + ANSI_RESET);
+        System.out.println(ANSI_GREEN + "***********************" + ANSI_RESET);
     }
 
     public void printLoginMenu() {
@@ -66,27 +69,22 @@ public class ConsoleService {
         return scanner.nextLine();
     }
 
-/*    public String promptForPassword(String prompt) {
-        System.out.print(prompt);
-        char[] passString = console.readPassword();
-        return new String(passString);
-    }*/
-
 
     public TransferCredentials promptForTransferCredentials(long fromId) {
         long toID = promptForInt("Enter ID of user you are sending to: ");
         if (toID == fromId) {
             toID = promptForInt("You cannot send bucks to yourself! " +
-                    "Please Enter ID of user you are sending to: ");
+                    "\nPlease Enter ID of user you are sending to: ");
         }
         BigDecimal amount = promptForBigDecimal("Please enter the amount to send: ");
         return new TransferCredentials(fromId, toID, amount);
     }
+
     public TransferCredentials promptForRequestTransferCredentials(long toId) {
         long fromId = promptForInt("Enter ID of user you would like to request money from: ");
         if (toId == fromId) {
             fromId = promptForInt("You cannot send bucks to yourself! " +
-                    "Please Enter ID of user you would like to request money from: ");
+                    "\nPlease Enter ID of user you would like to request money from: ");
         }
         BigDecimal amount = promptForBigDecimal("Please enter the amount to request: ");
         return new TransferCredentials(fromId, toId, amount);
@@ -98,7 +96,7 @@ public class ConsoleService {
             try {
                 return Integer.parseInt(scanner.nextLine());
             } catch (NumberFormatException e) {
-                System.out.println("Please enter a valid ID number.");
+                System.out.print("Please enter valid ID: ");
                 BasicLogger.log(e.getMessage() + " Invalid ID Entered");
             }
         }
@@ -110,7 +108,7 @@ public class ConsoleService {
             try {
                 return new BigDecimal(scanner.nextLine());
             } catch (NumberFormatException e) {
-                System.out.println("Please enter a valid amount.");
+                System.out.print("Please enter a valid amount: ");
                 BasicLogger.log(e.getMessage() + " Invalid Amount Entered");
             }
         }
@@ -149,7 +147,7 @@ public class ConsoleService {
         System.out.println("To: " + to);
         System.out.println("Type: " + type);
         System.out.println("Status: " + status);
-        System.out.println("Amount: $" + amount + "\n");
+        System.out.printf("Amount: $ %.2f" , amount);
     }
 
     public void printAllUsers(List<User> users) {

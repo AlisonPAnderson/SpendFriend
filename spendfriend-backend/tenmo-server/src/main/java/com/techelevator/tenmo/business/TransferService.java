@@ -56,33 +56,34 @@ public class TransferService {
     }
 
     public Transfer completeTransfer (Transfer transfer) throws NonSufficentFundsException {
+        try {
+            Account fromAccount = accountService.findByAccountId(transfer.getAccountIdFrom());
+            Account toAccount = accountService.findByAccountId(transfer.getAccountIdTo());
 
-        Account fromAccount = accountService.findByAccountId(transfer.getAccountIdFrom());
-        Account toAccount = accountService.findByAccountId(transfer.getAccountIdTo());
+            BigDecimal newFromBalance =
+                    accountService.subtractFromBalance(fromAccount.getId(), transfer.getAmount());
+            BigDecimal newToBalance =
+                    accountService.addToBalance(toAccount.getId(), transfer.getAmount());
 
-        BigDecimal newFromBalance =
-                accountService.subtractFromBalance(fromAccount.getId(), transfer.getAmount());
-        BigDecimal newToBalance =
-                accountService.addToBalance(toAccount.getId(), transfer.getAmount());
+            fromAccount = accountService.updateBalance(fromAccount, newFromBalance);
+            toAccount = accountService.updateBalance(toAccount, newToBalance);
 
-        fromAccount = accountService.updateBalance(fromAccount, newFromBalance);
-        toAccount = accountService.updateBalance(toAccount, newToBalance);
-
-        transfer.setTransferStatus(TransferStatus.approved);
+            transfer.setTransferStatus(TransferStatus.approved);
 
             accountRepository.saveAndFlush(fromAccount);
             accountRepository.saveAndFlush(toAccount);
-
+        } catch (NullPointerException e) {
+            BasicLogger.log(e.getMessage());
+            transfer.setTransferStatus(TransferStatus.invalid_transfer);
+        }
         return transfer;
     }
 
     public Transfer sendTransfer(Transfer transfer, String principalName) {
-        String sendingUsername = accountService.findByAccountId(transfer.getAccountIdFrom()).getUser().getUsername();
-
-
         if (TransferStatus.isValid(transfer.getTransferStatus())) {
             Transfer sentTransfer = transfer;
             try {
+                String sendingUsername = userService.findByAccountId(transfer.getAccountIdFrom()).getUsername();
                 if (!sendingUsername.equals(principalName) ) {
                     throw new TransferApprovalException();
                 } else {
@@ -98,6 +99,9 @@ public class TransferService {
                 sentTransfer.setTransferStatus(TransferStatus.unauthorized);
                 System.out.println(ex.getMessage());
                 BasicLogger.log(ex.getMessage() + " | Current user: " + principalName);
+            } catch (Exception x) {
+                sentTransfer.setTransferStatus(TransferStatus.invalid_transfer);
+                BasicLogger.log(x.getMessage() + " | Current user: " + principalName);
             }
             return sentTransfer;
         } else {
@@ -106,11 +110,10 @@ public class TransferService {
     }
 
     public Transfer approveTransfer (Transfer requestedTransfer, String principalName) {
-        String sendingUsername = accountService.findByAccountId(requestedTransfer.getAccountIdFrom()).getUser().getUsername();
-
         if (requestedTransfer.getTransferStatus() == TransferStatus.pending) {
             Transfer approvedTransfer = requestedTransfer;
             try {
+                String sendingUsername = userService.findByAccountId(requestedTransfer.getAccountIdFrom()).getUsername();
                 if (!sendingUsername.equals(principalName) ) {
                     throw new TransferApprovalException();
                 } else {
@@ -125,6 +128,9 @@ public class TransferService {
                 approvedTransfer.setTransferStatus(TransferStatus.unauthorized);
                 System.out.println(ex.getMessage());
                 BasicLogger.log(ex.getMessage() + " | Current user: " + principalName);
+            } catch (Exception x) {
+                approvedTransfer.setTransferStatus(TransferStatus.invalid_transfer);
+                BasicLogger.log(x.getMessage() + " | Current user: " + principalName);
             }
             return approvedTransfer;
         } else {
@@ -133,8 +139,8 @@ public class TransferService {
     }
 
     public Transfer rejectTransfer (Transfer rejectedTransfer, String principalName) {
-        String sendingUsername = userService.findByUserId(rejectedTransfer.getAccountIdFrom()).getUsername();
         try {
+            String sendingUsername = userService.findByAccountId(rejectedTransfer.getAccountIdFrom()).getUsername();
             if (!sendingUsername.equals(principalName) || rejectedTransfer.getTransferStatus() != TransferStatus.pending) {
                 throw new TransferApprovalException();
             } else {
@@ -145,6 +151,9 @@ public class TransferService {
             rejectedTransfer.setTransferStatus(TransferStatus.unauthorized);
             System.out.println(e.getMessage());
             BasicLogger.log(e.getMessage() + " | Current user: " + principalName);
+        } catch (Exception x) {
+            rejectedTransfer.setTransferStatus(TransferStatus.invalid_transfer);
+            BasicLogger.log(x.getMessage() + " | Current user: " + principalName);
         }
         return rejectedTransfer;
     }

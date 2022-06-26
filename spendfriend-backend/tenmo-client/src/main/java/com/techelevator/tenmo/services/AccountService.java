@@ -32,7 +32,6 @@ public class  AccountService {
 
     public BigDecimal getBalance(long accountId) {
         BigDecimal balance = null;
-        //var entity = createEntity();
         ResponseEntity<BigDecimal> response;
         try {
           response = restTemplate.exchange(baseUrl + "account/" + accountId + "/balance", HttpMethod.GET, createEntity(),  BigDecimal.class );
@@ -45,10 +44,9 @@ public class  AccountService {
     }
 
     public List<User> getAllUsers() {
-        HttpEntity<Void> entity = createEntity();
         User[] users = new User[]{};
         try {
-           ResponseEntity<User[]> userEntity = restTemplate.exchange(baseUrl + "users", HttpMethod.GET, entity, User[].class);
+           ResponseEntity<User[]> userEntity = restTemplate.exchange(baseUrl + "users", HttpMethod.GET, createEntity(), User[].class);
            users = userEntity.getBody();
         } catch (RestClientException e) {
             BasicLogger.log(e.getMessage());
@@ -57,10 +55,9 @@ public class  AccountService {
     }
 
     public Account getAccountByAccountId (long accountId) {
-        HttpEntity<Void> entity = createEntity();
         Account account = new Account();
         try {
-           ResponseEntity<Account> accountEntity = restTemplate.exchange(baseUrl + "account/" + accountId, HttpMethod.GET, entity, Account.class);
+           ResponseEntity<Account> accountEntity = restTemplate.exchange(baseUrl + "account/" + accountId, HttpMethod.GET, createEntity(), Account.class);
           account = accountEntity.getBody();
         } catch (RestClientException e) {
             BasicLogger.log(e.getMessage());
@@ -69,10 +66,9 @@ public class  AccountService {
     }
 
     public Account getAccountByUserId (long userId) {
-        var entity = createEntity();
         Account account = new Account();
         try {
-            ResponseEntity<Account> accountEntity = restTemplate.exchange(baseUrl + "user/" + userId + "/account", HttpMethod.GET, entity, Account.class);
+            ResponseEntity<Account> accountEntity = restTemplate.exchange(baseUrl + "user/" + userId + "/account", HttpMethod.GET, createEntity(), Account.class);
             account = accountEntity.getBody();
         } catch (RestClientException e) {
             BasicLogger.log(e.getMessage());
@@ -81,10 +77,9 @@ public class  AccountService {
     }
 
     public User getUserByUserId (long userId) {
-        HttpEntity entity = createEntity();
         User user = new User();
         try {
-            ResponseEntity<User> userEntity =  restTemplate.exchange(baseUrl + "user/" + userId, HttpMethod.GET, entity, User.class);
+            ResponseEntity<User> userEntity =  restTemplate.exchange(baseUrl + "user/" + userId, HttpMethod.GET, createEntity(), User.class);
             user = userEntity.getBody();
         } catch (RestClientException e) {
             BasicLogger.log(e.getMessage());
@@ -101,13 +96,6 @@ public class  AccountService {
 
     private HttpEntity createEntity() {
         var headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(authToken);
-        return new HttpEntity<String>(headers);
-    }
-
-    public HttpEntity makeEntity(){
-        HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(authToken);
         return new HttpEntity<String>(headers);
